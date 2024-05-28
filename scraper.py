@@ -32,6 +32,7 @@ def fetch_travel_time():
         options.add_argument("--window-size=1920,1080")
 
     with webdriver.Chrome(service=service, options=options) as driver:
+        # TODO: if before / after certain time, reorder origin / destination
         url = f'https://www.google.com/maps/dir/{ORIGIN}/{DESTINATION}'
         driver.get(url)
 

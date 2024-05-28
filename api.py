@@ -2,7 +2,9 @@
 from flask import Flask, jsonify
 import json
 import os
+from dotenv import load_dotenv
 
+load_dotenv(".env")
 CACHE_FILE = os.getenv('CACHE_FILE')
 
 app = Flask(__name__)
@@ -18,4 +20,4 @@ def get_travel_info():
 
 if __name__ == '__main__':
     print(os.getenv('PORT'))
-    app.run(debug=True, port=os.getenv('PORT'))
+    app.run(host='0.0.0.0', port=os.getenv('PORT'))
