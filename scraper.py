@@ -32,25 +32,45 @@ def fetch_travel_time():
         options.add_argument("--window-size=1920,1080")
 
     with webdriver.Chrome(service=service, options=options) as driver:
-        # TODO: if before / after certain time, reorder origin / destination
-        url = f'https://www.google.com/maps/dir/{ORIGIN}/{DESTINATION}'
+
+        current_time = datetime.now().time()
+        if current_time < datetime.strptime('8:00:00', '%H:%M:%S').time() or current_time >= datetime.strptime('22:00:00', '%H:%M:%S').time():
+            url = f'https://www.google.nl/maps/dir/{ORIGIN}/{DESTINATION}'
+        else:
+            url = f'https://www.google.nl/maps/dir/{DESTINATION}/{ORIGIN}'
+
+        print(url)
         driver.get(url)
 
+        # save page as html
+        # with open('page_source.html', 'w', encoding='utf-8') as f:
+        #     f.write(driver.page_source)
+
         try:
-            # cookies
-            WebDriverWait(driver, 20).until(
-                EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="Alles afwijzen"]')) # change to own lan
-            ).click()
+            try:
+                # cookies
+                WebDriverWait(driver, 2).until(
+                    # EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="Alles afwijzen"]'))
+                    EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="Alle ablehnen"]')) # change to own/server lan
+                ).click()
+            except:
+                print('No cookies')
 
-            travel_time_element = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.XPATH, '//div[contains(@class, "Fk3sm fontHeadlineSmall delay-light")]'))
-            )
-            travel_time = travel_time_element.text
+            try:
+                travel_time_element = WebDriverWait(driver, 20).until(
+                    EC.presence_of_element_located((By.XPATH, '//div[contains(@class, "Fk3sm fontHeadlineSmall delay-light")]'))
+                )
+                travel_time = travel_time_element.text
+            except:
+                print('Error while fetching travel time')
 
-            distance_element = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.XPATH, '//div[contains(@class, "ivN21e tUEI8e fontBodyMedium")]/div'))
-            )
-            distance = distance_element.text
+            try:
+                distance_element = WebDriverWait(driver, 20).until(
+                    EC.presence_of_element_located((By.XPATH, '//div[contains(@class, "ivN21e tUEI8e fontBodyMedium")]/div'))
+                )
+                distance = distance_element.text
+            except:
+                print('Error while fetching distance')
 
             return travel_time, distance
         except Exception as e:
@@ -59,6 +79,7 @@ def fetch_travel_time():
 
 def cache_travel_info():
     travel_time, distance = fetch_travel_time()
+    
     if travel_time and distance:
         current_time = datetime.now().strftime('%d-%m-%Y %H:%M:%S') # or unix
         with open(CACHE_FILE, 'w') as f:
@@ -66,6 +87,8 @@ def cache_travel_info():
         print(f'Cached travel time: {travel_time}, distance: {distance}, timestamp: {current_time}')
     else:
         print('Failed to fetch travel info')
+
+    print('-------------------------------------------')
 
 if __name__ == '__main__':
     cache_travel_info()
